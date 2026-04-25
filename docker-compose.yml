@@ -1,0 +1,70 @@
+version: "3.9"
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: atm-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  auth-service:
+    build:
+      context: ./auth-service
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/atmdb
+      - PORT=4001
+    ports:
+      - "4001:4001"
+    depends_on:
+      - mongodb
+
+  account-service:
+    build:
+      context: ./account-service
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/atmdb
+      - PORT=4002
+    ports:
+      - "4002:4002"
+    depends_on:
+      - mongodb
+
+  transaction-service:
+    build:
+      context: ./transaction-service
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/atmdb
+      - PORT=4003
+    ports:
+      - "4003:4003"
+    depends_on:
+      - mongodb
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+    environment:
+      - PORT=4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      - auth-service
+      - account-service
+      - transaction-service
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173"
+    command: ["npm","run","dev","--","--host","0.0.0.0"]
+    depends_on:
+      - api-gateway
+
+volumes:
+  mongo-data:

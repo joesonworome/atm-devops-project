@@ -5,16 +5,17 @@ const mongoose = require("mongoose");
 const authRoutes = require("./routes/authRoutes");
 
 const app = express();
-const PORT = 4001;
+const PORT = process.env.PORT || 4001;
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/atmdb";
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection
-mongoose.connect("mongodb://localhost:27017/atmdb")
+// MongoDB connection (non-blocking)
+mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Auth DB connected"))
-  .catch((err) => console.error("❌ DB connection error:", err));
+  .catch((err) => console.error("⚠️ DB connection error (service will continue):", err.message));
 
 // Health check
 app.get("/health", (req, res) => {
@@ -24,7 +25,7 @@ app.get("/health", (req, res) => {
 // 🔥 IMPORTANT — connect routes
 app.use("/api/auth", authRoutes);
 
-// Start server
+// Start server (independent of DB connection)
 app.listen(PORT, () => {
   console.log(`Auth service running on port ${PORT}`);
 });
