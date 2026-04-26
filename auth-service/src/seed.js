@@ -1,19 +1,28 @@
+require("dotenv").config();
 const mongoose = require("mongoose");
 const User = require("./models/User");
 
-mongoose.connect("mongodb://localhost:27017/atmdb");
-
 async function seed() {
-  await User.deleteMany({});
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
 
-  await User.create({
-    username: "student1",
-    pin: "1234",
-    accountNumber: "ACC001"
-  });
+    console.log("✅ MongoDB connected");
 
-  console.log("✅ User seeded");
-  process.exit();
+    await User.deleteMany({});
+
+    await User.create({
+      username: "student1",
+      pin: "1234",
+      accountNumber: "ACC001"
+    });
+
+    console.log("✅ User seeded");
+    process.exit(0);
+  } catch (error) {
+    console.error("❌ Seed failed:", error.message);
+    process.exit(1);
+  }
 }
 
+nmp
 seed();
