@@ -24,5 +24,4 @@ async function seed() {
   }
 }
 
-nmp
 seed();

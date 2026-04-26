@@ -1,12 +1,13 @@
+require("dotenv").config();
 const mongoose = require("mongoose");
 const Account = require("./models/Account");
 
-mongoose.connect("mongodb://localhost:27017/atmdb")
-  .then(() => console.log("MongoDB connected for account seeding"))
-  .catch((err) => console.error("MongoDB connection error:", err));
-
 async function seed() {
   try {
+    await mongoose.connect(process.env.MONGO_URI);
+
+    console.log("✅ MongoDB connected for account seeding");
+
     await Account.deleteMany({});
 
     await Account.create({
@@ -16,9 +17,10 @@ async function seed() {
     });
 
     console.log("✅ Account seeded successfully");
-    process.exit();
+    process.exit(0);
+
   } catch (error) {
-    console.error("❌ Seeding failed:", error);
+    console.error("❌ Seeding failed:", error.message);
     process.exit(1);
   }
 }
