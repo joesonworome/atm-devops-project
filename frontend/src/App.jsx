@@ -140,10 +140,6 @@ function App() {
   return (
     <div className="app-shell">
       <header className="top-bar">
-        <div>
-          <span className="brand">Eagle Bank</span>
-          <span className="tagline">A modern ATM experience</span>
-        </div>
         {view === 'dashboard' && (
           <button className="ghost-button" onClick={resetSession}>
             Sign out
@@ -155,15 +151,9 @@ function App() {
         {view === 'login' ? (
           <section className="panel login-panel">
             <div className="login-panel__hero">
-              <div className="login-badge">
-                <span className="badge-icon">🔒</span>
-                <span>Secure banking login</span>
-              </div>
-              <div className="panel-header">
-                <p className="eyebrow">Secure Access</p>
-                <h1>Login to your account</h1>
-                <p className="intro-copy">Quick access to balance, transfers and transaction history.</p>
-              </div>
+              <p className="eyebrow">ATM</p>
+              <h1>Login</h1>
+              <p className="intro-copy">Enter your username and PIN to continue.</p>
             </div>
 
             <form className="form-grid" onSubmit={login}>
@@ -172,7 +162,7 @@ function App() {
                 <input
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
-                  placeholder="e.g., student1"
+                  placeholder="Username"
                   autoComplete="username"
                   required
                 />
@@ -192,20 +182,9 @@ function App() {
               </label>
 
               <button type="submit" className="primary-button" disabled={loading}>
-                {loading ? 'Authenticating…' : 'Access Account'}
+                {loading ? 'Authenticating…' : 'Continue'}
               </button>
             </form>
-
-            <div className="info-panel">
-              <div>
-                <strong>Fast, secure login</strong>
-                <p>Use your bank ID and 4-digit PIN to manage your account safely.</p>
-              </div>
-              <div>
-                <strong>Real-time updates</strong>
-                <p>See updated balances and lending details instantly after login.</p>
-              </div>
-            </div>
 
             {status && (
               <div className="status-message">
