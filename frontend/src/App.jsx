@@ -141,8 +141,8 @@ function App() {
     <div className="app-shell">
       <header className="top-bar">
         <div>
-          <span className="brand">ATM DevOps</span>
-          <span className="tagline">Online banking dashboard</span>
+          <span className="brand">Eagle Bank</span>
+          <span className="tagline">A modern ATM experience</span>
         </div>
         {view === 'dashboard' && (
           <button className="ghost-button" onClick={resetSession}>
@@ -154,11 +154,15 @@ function App() {
       <main className="content">
         {view === 'login' ? (
           <section className="panel login-panel">
-            <div className="panel-header">
-              <div>
+            <div className="login-panel__hero">
+              <div className="login-badge">
+                <span className="badge-icon">🔒</span>
+                <span>Secure banking login</span>
+              </div>
+              <div className="panel-header">
                 <p className="eyebrow">Secure Access</p>
-                <h1>ATM Login</h1>
-                <p>Enter your credentials to access your account</p>
+                <h1>Login to your account</h1>
+                <p className="intro-copy">Quick access to balance, transfers and transaction history.</p>
               </div>
             </div>
 
@@ -168,7 +172,7 @@ function App() {
                 <input
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
-                  placeholder="Enter your username"
+                  placeholder="e.g., student1"
                   autoComplete="username"
                   required
                 />
@@ -192,11 +196,16 @@ function App() {
               </button>
             </form>
 
-            <p className="info-note">
-              🔒 <strong>Security Note:</strong> Your PIN is encrypted and secure.
-              Use your registered username and 4-digit PIN to access banking features
-              including balance checking, deposits, withdrawals, and transaction history.
-            </p>
+            <div className="info-panel">
+              <div>
+                <strong>Fast, secure login</strong>
+                <p>Use your bank ID and 4-digit PIN to manage your account safely.</p>
+              </div>
+              <div>
+                <strong>Real-time updates</strong>
+                <p>See updated balances and lending details instantly after login.</p>
+              </div>
+            </div>
 
             {status && (
               <div className="status-message">
