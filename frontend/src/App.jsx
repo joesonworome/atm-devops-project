@@ -1,120 +1,320 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
 import './App.css'
 
+const AUTH_URL = 'http://localhost:4000/api/auth'
+const ACCOUNT_URL = 'http://localhost:4000/api/account'
+const TRANSACTION_URL = 'http://localhost:4000/api/transaction'
+
+const formatCurrency = (value) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(value)
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [view, setView] = useState('login')
+  const [username, setUsername] = useState('')
+  const [pin, setPin] = useState('')
+  const [accountNumber, setAccountNumber] = useState('')
+  const [accountName, setAccountName] = useState('')
+  const [balance, setBalance] = useState(0)
+  const [transactions, setTransactions] = useState([])
+  const [amount, setAmount] = useState('')
+  const [transactionType, setTransactionType] = useState('deposit')
+  const [description, setDescription] = useState('')
+  const [status, setStatus] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const resetSession = () => {
+    setView('login')
+    setUsername('')
+    setPin('')
+    setAccountNumber('')
+    setAccountName('')
+    setBalance(0)
+    setTransactions([])
+    setAmount('')
+    setTransactionType('deposit')
+    setDescription('')
+    setStatus('')
+    setLoading(false)
+  }
+
+  const updateStatus = (message) => {
+    setStatus(message)
+  }
+
+  const fetchAccount = async (accountNum) => {
+    const response = await fetch(`${ACCOUNT_URL}/balance/${accountNum}`)
+    const data = await response.json()
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Unable to load account balance')
+    }
+    setBalance(data.account.balance)
+    setAccountName(data.account.name)
+  }
+
+  const fetchTransactions = async (accountNum) => {
+    const response = await fetch(`${TRANSACTION_URL}/history/${accountNum}`)
+    const data = await response.json()
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Unable to load transactions')
+    }
+    setTransactions(data.transactions || [])
+  }
+
+  const login = async (event) => {
+    event.preventDefault()
+    setLoading(true)
+    updateStatus('Signing in…')
+
+    try {
+      const response = await fetch(`${AUTH_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, pin })
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Invalid credentials')
+      }
+
+      setAccountNumber(data.user.accountNumber)
+      setAccountName(data.user.username)
+      setView('dashboard')
+      updateStatus('Logged in successfully')
+      await fetchAccount(data.user.accountNumber)
+      await fetchTransactions(data.user.accountNumber)
+    } catch (error) {
+      updateStatus(error.message)
+    }
+
+    setLoading(false)
+  }
+
+  const submitTransaction = async (event) => {
+    event.preventDefault()
+    setLoading(true)
+    updateStatus(`${transactionType === 'deposit' ? 'Depositing' : 'Withdrawing'} funds…`)
+
+    try {
+      const amountNumeric = Number(amount)
+      if (!accountNumber || Number.isNaN(amountNumeric) || amountNumeric <= 0) {
+        throw new Error('Enter a valid amount')
+      }
+
+      const response = await fetch(`${ACCOUNT_URL}/${transactionType}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountNumber, amount: amountNumeric })
+      })
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Transaction failed')
+      }
+
+      setBalance(result.account.balance)
+      updateStatus(`${transactionType === 'deposit' ? 'Deposit' : 'Withdrawal'} complete`)
+
+      await fetch(`${TRANSACTION_URL}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountNumber,
+          amount: amountNumeric,
+          type: transactionType,
+          description: description || `${transactionType} via frontend`
+        })
+      })
+
+      await fetchTransactions(accountNumber)
+      setAmount('')
+      setDescription('')
+    } catch (error) {
+      updateStatus(error.message)
+    }
+
+    setLoading(false)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <div className="app-shell">
+      <header className="top-bar">
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+          <span className="brand">ATM DevOps</span>
+          <span className="tagline">Online banking dashboard</span>
         </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+        {view === 'dashboard' && (
+          <button className="ghost-button" onClick={resetSession}>
+            Sign out
+          </button>
+        )}
+      </header>
 
-      <div className="ticks"></div>
+      <main className="content">
+        {view === 'login' ? (
+          <section className="panel login-panel">
+            <div className="panel-header">
+              <div>
+                <p className="eyebrow">Welcome back</p>
+                <h1>ATM login</h1>
+              </div>
+            </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+            <form className="form-grid" onSubmit={login}>
+              <label>
+                Username
+                <input
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  placeholder="e.g., johndoe"
+                  required
+                />
+              </label>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+              <label>
+                PIN
+                <input
+                  value={pin}
+                  onChange={(event) => setPin(event.target.value)}
+                  type="password"
+                  placeholder="1234"
+                  required
+                />
+              </label>
+
+              <button type="submit" className="primary-button" disabled={loading}>
+                {loading ? 'Signing in…' : 'Sign in'}
+              </button>
+            </form>
+
+            <p className="info-note">
+              Use your account username and PIN to access your balance, transactions,
+              deposit, and withdrawal features.
+            </p>
+
+            {status && <div className="status-message">{status}</div>}
+          </section>
+        ) : (
+          <section className="panel dashboard-panel">
+            <div className="dashboard-grid">
+              <div className="card summary-card">
+                <div className="summary-header">
+                  <p className="eyebrow">Account summary</p>
+                  <p className="subtle">{accountNumber}</p>
+                </div>
+                <h2>{accountName}</h2>
+                <p className="large-balance">{formatCurrency(balance)}</p>
+                <p className="detail">Current balance available for withdrawal and deposit.</p>
+              </div>
+
+              <div className="card actions-card">
+                <div className="summary-header">
+                  <p className="eyebrow">Quick transaction</p>
+                  <p className="subtle">{view === 'dashboard' ? 'Secure access' : ''}</p>
+                </div>
+
+                <form className="form-grid" onSubmit={submitTransaction}>
+                  <div className="radio-group">
+                    <label className={transactionType === 'deposit' ? 'active' : ''}>
+                      <input
+                        type="radio"
+                        name="type"
+                        value="deposit"
+                        checked={transactionType === 'deposit'}
+                        onChange={() => setTransactionType('deposit')}
+                      />
+                      Deposit
+                    </label>
+                    <label className={transactionType === 'withdraw' ? 'active' : ''}>
+                      <input
+                        type="radio"
+                        name="type"
+                        value="withdraw"
+                        checked={transactionType === 'withdraw'}
+                        onChange={() => setTransactionType('withdraw')}
+                      />
+                      Withdraw
+                    </label>
+                  </div>
+
+                  <label>
+                    Amount
+                    <input
+                      type="number"
+                      min="1"
+                      step="0.01"
+                      value={amount}
+                      onChange={(event) => setAmount(event.target.value)}
+                      placeholder="100.00"
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    Description
+                    <input
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
+                      placeholder="Optional note"
+                    />
+                  </label>
+
+                  <button type="submit" className="primary-button" disabled={loading}>
+                    {loading ? 'Processing…' : transactionType === 'deposit' ? 'Deposit funds' : 'Withdraw funds'}
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div className="card history-card">
+              <div className="history-header">
+                <div>
+                  <p className="eyebrow">Transaction history</p>
+                  <h2>Recent activity</h2>
+                </div>
+                <button className="ghost-button" onClick={() => fetchTransactions(accountNumber)}>
+                  Refresh
+                </button>
+              </div>
+
+              {transactions.length === 0 ? (
+                <p className="empty-state">No transactions found yet.</p>
+              ) : (
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transactions.slice(0, 8).map((transaction) => (
+                        <tr key={transaction._id || transaction.createdAt}>
+                          <td>{new Date(transaction.createdAt).toLocaleString()}</td>
+                          <td>{transaction.type}</td>
+                          <td>{transaction.description || 'ATM transaction'}</td>
+                          <td>{formatCurrency(transaction.amount)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {status && <div className="status-message">{status}</div>}
+          </section>
+        )}
+      </main>
+
+      <footer className="footer">
+        Built for the ATM DevOps project · backend services running on localhost ports 4001, 4002, 4003
+      </footer>
+    </div>
   )
 }
 
