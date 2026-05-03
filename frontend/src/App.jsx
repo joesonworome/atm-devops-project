@@ -156,8 +156,9 @@ function App() {
           <section className="panel login-panel">
             <div className="panel-header">
               <div>
-                <p className="eyebrow">Welcome back</p>
-                <h1>ATM login</h1>
+                <p className="eyebrow">Secure Access</p>
+                <h1>ATM Login</h1>
+                <p>Enter your credentials to access your account</p>
               </div>
             </div>
 
@@ -167,33 +168,41 @@ function App() {
                 <input
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
-                  placeholder="e.g., johndoe"
+                  placeholder="Enter your username"
+                  autoComplete="username"
                   required
                 />
               </label>
 
               <label>
-                PIN
+                PIN Code
                 <input
                   value={pin}
                   onChange={(event) => setPin(event.target.value)}
                   type="password"
-                  placeholder="1234"
+                  placeholder="••••"
+                  autoComplete="current-password"
+                  maxLength="4"
                   required
                 />
               </label>
 
               <button type="submit" className="primary-button" disabled={loading}>
-                {loading ? 'Signing in…' : 'Sign in'}
+                {loading ? 'Authenticating…' : 'Access Account'}
               </button>
             </form>
 
             <p className="info-note">
-              Use your account username and PIN to access your balance, transactions,
-              deposit, and withdrawal features.
+              🔒 <strong>Security Note:</strong> Your PIN is encrypted and secure.
+              Use your registered username and 4-digit PIN to access banking features
+              including balance checking, deposits, withdrawals, and transaction history.
             </p>
 
-            {status && <div className="status-message">{status}</div>}
+            {status && (
+              <div className="status-message">
+                {status.includes('Invalid') || status.includes('error') ? '❌' : '✅'} {status}
+              </div>
+            )}
           </section>
         ) : (
           <section className="panel dashboard-panel">
