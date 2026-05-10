@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import './App.css'
 
-const AUTH_URL = 'http://localhost:4000/api/auth'
-const ACCOUNT_URL = 'http://localhost:4000/api/account'
-const TRANSACTION_URL = 'http://localhost:4000/api/transaction'
+const AUTH_URL = 'http://localhost:4001/api/auth'
+const ACCOUNT_URL = 'http://localhost:4002/api/account'
+const TRANSACTION_URL = 'http://localhost:4003/api/transaction'
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-US', {
