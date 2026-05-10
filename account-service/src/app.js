@@ -1,28 +1,31 @@
 const express = require("express");
 const cors = require("cors");
+const dotenv = require("dotenv");
 const mongoose = require("mongoose");
-
 const accountRoutes = require("./routes/accountRoutes");
 
+dotenv.config();
+
 const app = express();
-const PORT = process.env.PORT || 4002;
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/atmdb";
 
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection (non-blocking)
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("✅ Account DB connected"))
-  .catch((err) => console.error("⚠️ DB connection error (service will continue):", err.message));
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ Account Service connected to MongoDB"))
+  .catch((err) => console.error("❌ Account Service MongoDB error:", err));
 
 app.get("/health", (req, res) => {
-  res.json({ service: "account-service", status: "running" });
+  res.json({
+    service: "account-service",
+    status: "running"
+  });
 });
 
 app.use("/api/account", accountRoutes);
 
-// Start server (independent of DB connection)
-app.listen(PORT, () => {
-  console.log(`Account service running on port ${PORT}`);
+app.listen(process.env.PORT, () => {
+  console.log(`🚀 Account Service running on port ${process.env.PORT}`);
 });
+

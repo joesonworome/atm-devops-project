@@ -1,26 +1,31 @@
 const express = require("express");
 const cors = require("cors");
+const dotenv = require("dotenv");
 const mongoose = require("mongoose");
-
 const transactionRoutes = require("./routes/transactionRoutes");
 
+dotenv.config();
+
 const app = express();
-const PORT = process.env.PORT || 4003;
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/atmdb";
 
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("✅ Transaction DB connected"))
-  .catch((err) => console.error("⚠️ DB connection error (service will continue):", err.message));
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ Transaction Service connected to MongoDB"))
+  .catch((err) => console.error("❌ Transaction Service MongoDB error:", err));
 
 app.get("/health", (req, res) => {
-  res.json({ service: "transaction-service", status: "running" });
+  res.json({
+    service: "transaction-service",
+    status: "running"
+  });
 });
 
-app.use("/api/transaction", transactionRoutes);
+app.use("/api/transactions", transactionRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Transaction service running on port ${PORT}`);
+app.listen(process.env.PORT, () => {
+  console.log(`🚀 Transaction Service running on port ${process.env.PORT}`);
 });
+

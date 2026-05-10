@@ -1,31 +1,31 @@
 const express = require("express");
 const cors = require("cors");
+const dotenv = require("dotenv");
 const mongoose = require("mongoose");
-
 const authRoutes = require("./routes/authRoutes");
 
-const app = express();
-const PORT = process.env.PORT || 4001;
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/atmdb";
+dotenv.config();
 
-// Middleware
+const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection (non-blocking)
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("✅ Auth DB connected"))
-  .catch((err) => console.error("⚠️ DB connection error (service will continue):", err.message));
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ Auth Service connected to MongoDB"))
+  .catch((err) => console.error("❌ Auth Service MongoDB error:", err));
 
-// Health check
 app.get("/health", (req, res) => {
-  res.json({ service: "auth-service", status: "running" });
+  res.json({
+    service: "auth-service",
+    status: "running"
+  });
 });
 
-// 🔥 IMPORTANT — connect routes
 app.use("/api/auth", authRoutes);
 
-// Start server (independent of DB connection)
-app.listen(PORT, () => {
-  console.log(`Auth service running on port ${PORT}`);
+app.listen(process.env.PORT, () => {
+  console.log(`🚀 Auth Service running on port ${process.env.PORT}`);
 });
+

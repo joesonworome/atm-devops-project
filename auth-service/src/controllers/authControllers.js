@@ -1,19 +1,30 @@
 const User = require("../models/User");
 
 exports.login = async (req, res) => {
-  const { username, pin } = req.body;
+  try {
+    const username = String(req.body.username).trim();
+    const pin = String(req.body.pin).trim();
 
-  const user = await User.findOne({ username, pin });
+    const user = await User.findOne({ username });
 
-  if (!user) {
-    return res.status(401).json({
+    if (!user || String(user.pin).trim() !== pin) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials"
+      });
+    }
+
+    res.json({
+      success: true,
+      user: {
+        username: user.username,
+        accountNumber: user.accountNumber
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      message: "Invalid credentials"
+      message: "Login server error"
     });
   }
-
-  res.json({
-    success: true,
-    user
-  });
 };
